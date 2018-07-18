@@ -12,19 +12,46 @@ from openpyxl import load_workbook
 import os
 import datetime
 
+subjectList = ['GT-R', 'NV 350 Impendulo', 'Qashqai', 'NV 200 Combi',
+               'Tiida', 'Leaf', 'NAAMSA', 'K-line', 'Juke', 'X-Trail',
+               'Navara', 'Micra', 'NP 200', 'Patrol', 'Sentra',
+               'Nissan Festival of Motoring',
+               'Nissan drives for further growth',
+               'ICC Sponsorship', 'NP 300', 'Nissan Trailseeker',
+               'Nissan Corporate',
+               'Nissan Taxi Call Centre oppurtunity',
+               'Nissn long distance driving tips',
+               'Nissan Holiday Checklist', 'Pathfinder', 'NP 300 hardbody',
+               'NV 300', 'Workhorse', 'Almera', '350z', 'Hardbody',
+               'Simola Hillclimb', '370z', 'Murano', 'Nissan',
+               'Nissan Kicks', 'Nissan Primera', 'Bladeglider',
+               'Nissan ProPilot', 'Festival of Motoring', 'NV 350 Panel Van',
+               'Patrol Wagon', 'Livina', 'Nissan Sponsorship/sport',
+               'Nissan Motorsport','Nissan Spokespeople',
+               'General Industry related']
+
+productList = ['NP 300', 'GT-R', 'Qashqai', 'NV 200 Combi', 'Tiida',
+               'NV 300',  'Leaf', 'K-line', 'Juke', 'X-trail', 'NP 300',
+               '350z', 'Navara', 'Micra', 'NP 200', 'Patrol', 'Sentra' ,
+               '370z', 'Murano', 'Pathfinder', 'NP 300 hardbody', 'NV 300',
+               'Workhorse', 'Almera', 'NV 350 Panel Van', 'Livina',
+               'Patrol Wagon', 'Nissan Primera', 'Nissan ProPilot',
+               'Bladeglider']
+
+corporateList = ['NAAMSA', 'Nissan Corporate', 'Nissan', 'Nissan Motorsport',
+                 'Nissan Spokespeople', 'General Industry related',
+                 'Nissan Sponsorship/sport', 'Festival of Motoring',
+                 'Nissn long distance driving tips',
+                 'Nissan Holiday Checklist', 'Nissan Taxi Call Centre oppurtunity',
+                 'ICC Sponsorship', 'Nissan Festival of Motoring',
+                 'Nissan drives for further growth', 'Nissan Trailseeker']
+
 
 def inputfile(excelFile):
-    """Takes in an excel file name and returns a DataFrame.
+    """
 
-    Args:
-       excelFile (str):  The excel files name.
-
-    Returns:
-       df (class pandas.DataFrame): DataFrame containing data from excelFile
-
-    Raises:
-       FileNotFoundError
-
+    :param excelFile:
+    :return:
     """
     df = pd.read_excel(excelFile)
     return df
@@ -44,23 +71,10 @@ def inputfilePrint(excelFile):
     return df
 
 
-def inputfileBroadcast(excelFile):
-    #For future use
-    """Takes in an excel file name and returns a DataFrame.
-
-    Args:
-       excelFile (str):  The excel files name.
-
-    Returns:
-       class DataFrame. 
-    """
-    path = 'X:/DDI Media Monitoring/Broadcast/Broadcast summaries'\
-           '/Compiled summary/2018 Compiled Broadcast Summaries'
-
-    excelFile = path + excelFile
-    
-    df = pd.read_excel(excelFile, sheet_name=[0,1])
-    return df
+def online_fix(df):
+    #  Change Sentiment from number to String
+    for index in range(len(df.Sentiment)):
+        df.loc[[index], 'Sentiment']
 
 
 def print_fix(df):
@@ -68,40 +82,7 @@ def print_fix(df):
     Changes values for each row.
     """
     df['Category'] = ''
-    
-    subjectList = ['GT-R', 'NV 350 Impendulo', 'Qashqai', 'NV 200 Combi',
-                   'Tiida', 'Leaf', 'NAAMSA', 'K-line', 'Juke', 'X-Trail',
-                   'Navara', 'Micra', 'NP 200', 'Patrol', 'Sentra',
-                   'Nissan Festival of Motoring',
-                   'Nissan drives for further growth',
-                   'ICC Sponsorship', 'NP 300', 'Nissan Trailseeker',
-                   'Nissan Corporate',
-                   'Nissan Taxi Call Centre oppurtunity',
-                   'Nissn long distance driving tips',
-                   'Nissan Holiday Checklist', 'Pathfinder', 'NP 300 hardbody',
-                   'NV 300', 'Workhorse', 'Almera', '350z', 'Hardbody',
-                   'Simola Hillclimb', '370z', 'Murano', 'Nissan',
-                   'Nissan Kicks', 'Nissan Primera', 'Bladeglider',
-                   'Nissan ProPilot', 'Festival of Motoring', 'NV 350 Panel Van',
-                   'Patrol Wagon', 'Livina', 'Nissan Sponsorship/sport',
-                   'Nissan Motorsport','Nissan Spokespeople',
-                   'General Industry related']
 
-    productList = ['NP 300', 'GT-R', 'Qashqai', 'NV 200 Combi', 'Tiida',
-                   'NV 300',  'Leaf', 'K-line', 'Juke', 'X-trail', 'NP 300',
-                   '350z', 'Navara', 'Micra', 'NP 200', 'Patrol', 'Sentra' ,
-                   '370z', 'Murano', 'Pathfinder', 'NP 300 hardbody', 'NV 300',
-                   'Workhorse', 'Almera', 'NV 350 Panel Van', 'Livina',
-                   'Patrol Wagon', 'Nissan Primera', 'Nissan ProPilot',
-                   'Bladeglider']
-
-    corporateList = ['NAAMSA', 'Nissan Corporate', 'Nissan', 'Nissan Motorsport',
-                     'Nissan Spokespeople', 'General Industry related',
-                     'Nissan Sponsorship/sport', 'Festival of Motoring',
-                     'Nissn long distance driving tips',
-                     'Nissan Holiday Checklist', 'Nissan Taxi Call Centre oppurtunity',
-                     'ICC Sponsorship', 'Nissan Festival of Motoring',
-                     'Nissan drives for further growth', 'Nissan Trailseeker']
 
     #  Decides whether the category is Product or Corporate
     category = []
@@ -137,19 +118,13 @@ def print_fix(df):
     return df
 
 
-def broadcast(df):
+def broadcast_fix(df):
     df.Date  = pd.to_datetime(df.Date)
     df.Date = df.Date.dt.date
-
-#    if (df.loc[[index], 'Date'] < date & df.loc[[index], 'Client'] == 'Nissan') < df.loc[[index], 'Date']:
-
-
     ind = os.getcwd().rfind('\\')
     folderName = os.getcwd()[ind+1:]
     date = folderName[8:15]
 
-##    if (df.loc[[index], 'Date'] =< date && df.loc[[index], 'Client'] = 'Nissan') <
-##                                                df.loc[[index], 'Date']:
     
 
 def rankAVEData(df):
