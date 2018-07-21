@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import requests
 
+
 from urllib.parse import quote_plus
 from urllib.error import HTTPError
 from urllib.error import URLError
@@ -81,6 +82,39 @@ def inputfilePrint(excelFile):
     """
     df = pd.read_excel(excelFile, skiprows=2)
     return df
+
+
+def outputfile(df1, df2, df3, excelFileOut='final.xlsx'):
+    """
+    Takes in an DataFrame, the columns and new excel file name.
+
+    Outputs the new excel file with the new excl file name.
+    """
+    sheetNamePrint = 'Combined'
+
+    
+    
+
+    writer = df.to_excel(excelFileOut, index=False)
+    df1.to_excel(writer, 'Print')
+    df2.to_excel(writer, 'Online')
+    df3.to_excel(writer, 'Broadcast')
+    writer.save()
+         
+    print(excelFileOut, 'is done!')
+
+
+def get_outputfile_name():
+    """
+    """
+    date = ('AVE Report ' +
+            (datetime.date.today()-datetime.timedelta(days=7)).strftime(
+                                                                    "%d.%m.%Y")
+            + ' - ' +
+            datetime.date.today().strftime("%d.%m.%Y") +
+            '.xlsx')
+
+    return date
 
 
 def populate_delete_list():
@@ -176,10 +210,10 @@ def online_fix(df):
 ##            df.drop(index, inplace=True)
 ##            df = df.reset_index()
 
-        if find_category(row.description, row.url):
-            df.loc[[index], 'category'] = 'Product'
-        else:
-            df.loc[[index], 'category'] = 'Corporate'
+##        if find_category(row.description, row.url):
+##            df.loc[[index], 'category'] = 'Product'
+##        else:
+##            df.loc[[index], 'category'] = 'Corporate'
 
         if (row.domain_reach == 0) or (np.isnan(row.domain_reach)):
             df.loc[[index], 'domain_reach'] = 1000 ##  find_domain(row.url)
@@ -261,10 +295,15 @@ def broadcast_fix_old(df):
     week = df['Date'] >= (datetime.date.today() - datetime.timedelta(days=7))
 
     df = df[nissan & week].reset_index()
+    df['Total AVE'] = df['Total AVE'].astype(str).str[1:]
+    df['Total AVE'] = df['Total AVE'].str.replace(',','')
+    df['Total AVE'] = pd.to_numeric(df['Total AVE'])
 
     df = df.drop(['Tagger', 'Client', 'FTP Export', 'Timestamp'], axis=1)
 
     return df
+
+
 
     
 
@@ -277,21 +316,49 @@ def copysnapshotData(excelFile):
 
 printFile = 'print.xlsx'
 broadcastFile = 'broadcast.xlsx'
-df = inputfile(broadcastFile)
-
-df3 = broadcast_fix_old(df)
-#df1 = inputfilePrint(printFile)
-
-
 onlineFile = 'onlineandsocial.xlsx'
-#df2 = inputfile(onlineFile)
-#df = df2
-#df = online_fix(df)
-
-##outputsheet(df2)
-##outputfile(df, df.columns, 'Powerpoint Data1 - Copy.xlsx')
-#df = inputfilePrint('Print RAW.xlsx')
 
 
-#df.to_excel('output.xlsx', index=False)
-    
+
+outputfile = 'AVE Report 05.04.2018 - 11.04.2018.xlsx' # get_outputfile_name()
+
+dfPrint = inputfilePrint(printFile)
+dfOnline = inputfile(onlineFile)
+dfBroadcast = inputfile(broadcastFile)
+
+dfPrint = print_fix(df)
+df = online_fix(df)
+dfBroadcast = broadcast_fix_old(df)
+
+outputfile(dfPrint, dfOnline, dfBroadcast, outputfile)
+
+wb = load_workbook(outputfile, data_only=True)
+ws = wb['Summary']
+ws['B9'].value = (datetime.date.today()-datetime.timedelta(days=7)).strftime(
+                                                                    "%d.%m.%Y")
+                    + ' - ' + datetime.date.today().strftime("%d.%m.%Y"))
+
+TV = dfBroadcast['Platform'] == 'TV'
+Radio = dfBroadcast['Platform'] == 'Radio'
+
+ws['D12'].value = dfPrint.Ave.sum()
+ws['D13'].value = dfOnline.Ave.sum()
+
+
+ws['D14'].value = dfBroadcast.Ave.sum()
+ws['D15'].value = dfPrint.Ave.sum()
+
+ws['E12'].value = dfPrint.Ave.sum()
+ws['E13'].value = dfPrint.Ave.sum()
+ws['E14'].value = dfPrint.Ave.sum()
+ws['E15'].value = dfPrint.Ave.sum()
+
+pivotBroadcast = pd.pivot_table(df, index = ['Station'],
+                                values = ['Total AVE'],
+                                aggfunc={'Total AVE':
+                                         [np.sum, 'count']}).sort_values(by=['sum'],
+                                                                         ascending=False)
+
+
+
+wb.save(outputfile)
