@@ -10,10 +10,8 @@ import pandas as pd
 import numpy as np
 import requests
 
-
 from urllib.parse import quote_plus
-from urllib.error import HTTPError
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
@@ -57,14 +55,15 @@ corporateList = ['NAAMSA', 'Nissan Corporate', 'Nissan', 'Nissan Motorsport',
                  'ICC Sponsorship', 'Nissan Festival of Motoring',
                  'Nissan drives for further growth', 'Nissan Trailseeker']
 
-DELETE_LIST = []
-
 
 def inputfile(excelFile):
-    """
+    """Takes in an excel file name and returns a DataFrame.
 
-    :param excelFile:
-    :return:
+    Args:
+       excelFile (str):  The excel files name
+
+    Returns:
+       df (pandas.DataFrame)
     """
     df = pd.read_excel(excelFile)
     return df
@@ -75,64 +74,96 @@ def inputfilePrint(excelFile):
         first two rows.
 
     Args:
-       excelFile (str):  The excel files name.
+       excelFile (str):  The input excel files name
 
     Returns:
-       class DataFrame. 
+       df (pandas.DataFrame) 
     """
     df = pd.read_excel(excelFile, skiprows=2)
     return df
 
 
 def outputfile(df1, df2, df3, excelFileOut='final.xlsx'):
+   """Creates an output excel file using the 3 dataframes.
+
+    Args:
+       df1 (pandas.DataFrame): DataFrame to combine
+       df2 (pandas.DataFrame): DataFrame to combine
+       df3 (pandas.DataFrame): DataFrame to combine
+       excelFile (str):  The output excel files name.
     """
-    Takes in an DataFrame, the columns and new excel file name.
+   sheetNamePrint = 'Combined'
 
-    Outputs the new excel file with the new excl file name.
-    """
-    sheetNamePrint = 'Combined'
-
-    
-    
-
-    writer = df.to_excel(excelFileOut, index=False)
-    df1.to_excel(writer, 'Print')
-    df2.to_excel(writer, 'Online')
-    df3.to_excel(writer, 'Broadcast')
-    writer.save()
+   writer = df.to_excel(excelFileOut, index=False)
+   df1.to_excel(writer, 'Print')
+   df2.to_excel(writer, 'Online')
+   df3.to_excel(writer, 'Broadcast')
+   writer.save()
          
-    print(excelFileOut, 'is done!')
+   print(excelFileOut, 'is done!')
 
 
 def get_outputfile_name():
-    """
+    """Generates a string using today's date and a date from 7 days ago
+    
+    Returns:
+       date (string)
     """
     date = ('AVE Report ' +
-            (datetime.date.today()-datetime.timedelta(days=7)).strftime(
-                                                                    "%d.%m.%Y")
+            (datetime.date.today()-
+             datetime.timedelta(days=7)).strftime("%d.%m.%Y")
             + ' - ' +
-            datetime.date.today().strftime("%d.%m.%Y") +
+            (datetime.date.today()-
+             datetime.timedelta(days=1)).strftime("%d.%m.%Y") +
             '.xlsx')
 
     return date
 
 
-def populate_delete_list():
+def populate_delete_list(deletelist='delete_list.csv'):
     """Populates the DELETE_LIST
+
+    Args:
+        deletelist (string): The name of the delete file
+
+    Returns:
+       Returns List 
     """
+    deleteList = []
+    for url in list(pd.read_csv(deletelist)['Delete List']):
+        deleteList.append(url.replace('http://'
+                                      ,'').replace('https://'
+                                                   ,'').replace('www.',''))
+        
+    return deleteList
+        
     
 
-def check_url(url):
+def check_url(url, deleteList):
     """Checks if the given url is in the auto delete list.
+
+    Args:
+        url (string): URL to compare with delete list
+        deleteList (:obj: 'list' of :obj: 'str'): List of URL
+
+    Returns:
+       bool: True if url is in the list
     """
     
-    if DELETE_LIST.find(url):
+    if url in deleteList:
         return True
     else:
         return False
+    
 
 def getExtract(url):
     """Returns the paragraphs from a webpage
+
+    Args:
+        url (string): URL to extract paragraphs from
+
+    Returns:
+       text (str): Text from webpage paragraphs
     """
     text = ''
 
@@ -159,13 +190,20 @@ def getExtract(url):
 def find_category(description, url):
     """Determines whether the category is Product or Corporate from description
         and webpage paragraphs.
-    """
+        
+    Args:
+        description (string): Text from Online Data Frame
+        url (string): URL to extract paragraphs from
 
+    Returns:
+       bool: True if category is found
+    """
     for product in productList:
         if product.lower() in description.lower():
             return True
         else:
             text = getExtract(url)
+            print(url)
             if text != '':
                 if product.lower() in text.lower():
                     return True
@@ -177,18 +215,31 @@ def find_category(description, url):
 
 def find_domain(url):
     """Determines domain_reach from excelfile with domain numbers
+        
+    Args:
+        url (string): URL to compare with urlDatabaseList
+
+    Returns:
+       Reach based on urlDatabaseList if found otherwise it returns 1000 
     """
 
     for index, row in df.iterrows():
-        if url == df.urlList[index]:
+        if url == df.urlDatabaseList[index]:
             return df.reach[index]
         else:
             return 1000
 
 
-def online_fix(df):
+def online_fix(df, deleteList):
+    """Fix the 
+        
+    Args:
+        df (pandas.DataFrame): DataFrame from onlineandsocial.xlsx
+
+    Returns:
+        df (pandas.DataFrame): Fix DataFrame
     """
-    """
+    
     start_time = time.time()
 
     df = df.rename(columns = {'favorite' : 'category',
@@ -203,21 +254,26 @@ def online_fix(df):
     #  Gets rid of the time without time
     df.published_at = df.published_at.dt.date
 
-    
+    dropList = []
     
     for index, row in df.iterrows():
-##        if check_url:
-##            df.drop(index, inplace=True)
-##            df = df.reset_index()
+        df.loc[[index], 'source_url'] = row.source_url.replace(
+                        'http://','').replace('https://','').replace('www.','')
+        
+        if check_url(row.source_url, deleteList):
+            dropList.append(index)
 
-##        if find_category(row.description, row.url):
-##            df.loc[[index], 'category'] = 'Product'
-##        else:
-##            df.loc[[index], 'category'] = 'Corporate'
+    #df = df.drop(dropList, inplace=True)
+    
+    for index, row in df.iterrows():
+        if find_category(row.description, row.url):
+            df.loc[[index], 'category'] = 'Product'
+        else:
+            df.loc[[index], 'category'] = 'Corporate'
 
         if (row.domain_reach == 0) or (np.isnan(row.domain_reach)):
             df.loc[[index], 'domain_reach'] = 1000 ##  find_domain(row.url)
-
+    
     df.AVE = df.domain_reach*0.21
 
     df = df.drop(['id', 'alert_id', 'parent_id', 'children', 'parent_url',
@@ -228,20 +284,18 @@ def online_fix(df):
 
     return df
         
-        
-    
-
-    
-    
-    
-
 
 def print_fix(df):
-    """Changes values for each row.
+    """Fix the 
+        
+    Args:
+        df (pandas.DataFrame): DataFrame from print.xlsx
+
+    Returns:
+        df (pandas.DataFrame): Fix DataFrame
     """
     
     df['Category'] = ''
-
 
     #  Determines whether the category is Product or Corporate
     category = []
@@ -278,23 +332,29 @@ def print_fix(df):
     df['Referred Date'] = df['Referred Date'].dt.date
 
     df = df.drop(['Scanned Date', 'Reach', 'Language', 'Curation Date',
-                  'Client'],
-                 axis=1)
+                  'Client'], axis=1)
                               
     return df
 
 
 def broadcast_fix_old(df):
-    """
+    """Fix the 
+        
+    Args:
+        df (pandas.DataFrame): DataFrame from broadcast.xlsx
+
+    Returns:
+        df (pandas.DataFrame): Fix DataFrame
     """
     
     df.Date  = pd.to_datetime(df.Date)
     df.Date = df.Date.dt.date
 
     nissan = df['Client'] == 'Nissan'
-    week = df['Date'] >= (datetime.date.today() - datetime.timedelta(days=7))
+    week = df['Date'] >= (datetime.date.today() -
+                          datetime.timedelta(days=7))
 
-    df = df[nissan & week].reset_index()
+    df = df[nissan & week]
     df['Total AVE'] = df['Total AVE'].astype(str).str[1:]
     df['Total AVE'] = df['Total AVE'].str.replace(',','')
     df['Total AVE'] = pd.to_numeric(df['Total AVE'])
@@ -304,61 +364,93 @@ def broadcast_fix_old(df):
     return df
 
 
+def top3Summary(excelCells, top3, ave):
+    for index in range(len(top3[ave])):
+        excelCells[index][0].value = top3[ave].index[index]
+        excelCells[index][1].value = top3[ave,'count'][index]
+        excelCells[index][2].value = top3[ave,'sum'][index]
 
-    
 
-def copysnapshotData(excelFile):
-    wb = load_workbook(excelFile)
+def pivotTable(df, sources, ave):
+    """
+    """
+    pivot = pd.pivot_table(df, index = [sources],
+                           values = [ave],
+                           aggfunc={ave:
+                                    [np.sum, 'count']}).sort_values(
+                                                            by=(ave, 'sum'),
+                                                            ascending=False)
+    return pivot
 
-    
-    
 
+total_time = time.time()
+
+deleteList = populate_delete_list()
 
 printFile = 'print.xlsx'
 broadcastFile = 'broadcast.xlsx'
 onlineFile = 'onlineandsocial.xlsx'
 
-
-
-outputfile = 'AVE Report 05.04.2018 - 11.04.2018.xlsx' # get_outputfile_name()
+outputfilename = get_outputfile_name()
 
 dfPrint = inputfilePrint(printFile)
 dfOnline = inputfile(onlineFile)
 dfBroadcast = inputfile(broadcastFile)
 
-dfPrint = print_fix(df)
-df = online_fix(df)
-dfBroadcast = broadcast_fix_old(df)
+dfPrint = print_fix(dfPrint)
+dfOnline = online_fix(dfOnline, deleteList)
+dfBroadcast = broadcast_fix_old(dfBroadcast)
 
-outputfile(dfPrint, dfOnline, dfBroadcast, outputfile)
-
-wb = load_workbook(outputfile, data_only=True)
+wb = load_workbook('AVE Report 05.04.2018 - 11.04.2018.xlsx')
 ws = wb['Summary']
-ws['B9'].value = (datetime.date.today()-datetime.timedelta(days=7)).strftime(
-                                                                    "%d.%m.%Y")
-                    + ' - ' + datetime.date.today().strftime("%d.%m.%Y"))
 
-TV = dfBroadcast['Platform'] == 'TV'
-Radio = dfBroadcast['Platform'] == 'Radio'
+ws['B9'].value = ((datetime.date.today()-
+                   datetime.timedelta(days=7)).strftime("%d.%m.%Y")
+                  + ' - ' +
+                  (datetime.date.today()-
+                   datetime.timedelta(days=1)).strftime("%d.%m.%Y"))
 
-ws['D12'].value = dfPrint.Ave.sum()
-ws['D13'].value = dfOnline.Ave.sum()
-
-
-ws['D14'].value = dfBroadcast.Ave.sum()
-ws['D15'].value = dfPrint.Ave.sum()
-
+ws['D12'].value = dfPrint.Ave.count()
 ws['E12'].value = dfPrint.Ave.sum()
-ws['E13'].value = dfPrint.Ave.sum()
-ws['E14'].value = dfPrint.Ave.sum()
-ws['E15'].value = dfPrint.Ave.sum()
 
-pivotBroadcast = pd.pivot_table(df, index = ['Station'],
-                                values = ['Total AVE'],
-                                aggfunc={'Total AVE':
-                                         [np.sum, 'count']}).sort_values(by=['sum'],
-                                                                         ascending=False)
+ws['D13'].value = dfOnline.AVE.count()
+ws['E13'].value = dfOnline.AVE.sum()
 
+radio = dfBroadcast['Platform'] == 'Radio'
+tv = dfBroadcast['Platform'] == 'TV'
 
+dfRadio = dfBroadcast[radio]
+dfTV = dfBroadcast[tv]
 
-wb.save(outputfile)
+pivotPrint = pivotTable(dfPrint,'Media', 'Ave')
+pivotOnline = pivotTable(dfOnline, 'source_url', 'AVE')
+
+if not dfRadio.empty:
+    print('not empty')
+    ws['D14'].value = dfRadio['Total AVE'].count()
+    ws['E14'].value = dfRadio['Total AVE'].sum()
+    pivotRadio = pivotTable(dfRadio, 'Station', 'Total AVE')
+    top3Radio = pivotRadio.head(3)
+    excelCellsRadio = ws['G18':'I20']
+    top3Summary(excelCellsRadio, top3Radio, 'Total AVE')
+
+if not dfTV.empty:
+    ws['D13'].value = dfTV['Total AVE'].count()
+    ws['E13'].value = dfTV['Total AVE'].sum()
+    pivotTV = pivotTable(dfTV, 'Station', 'Total AVE')
+    top3TV = pivotTV.head(3)
+    excelCellsTV = ws['K12':'M14']
+    top3Summary(excelCellsTV, top3TV, 'Total AVE')
+
+top3Print = pivotPrint.head(3)
+top3Online = pivotOnline.head(3)
+
+excelCellsPrint = ws['G12':'I14']
+excelCellsOnline = ws['G18':'I20']
+
+top3Summary(excelCellsPrint, top3Print, 'Ave')
+top3Summary(excelCellsOnline, top3Online, 'AVE')
+
+wb.save(outputfilename)
+
+print("--- Took %s seconds ---" % (time.time() - total_time))
