@@ -19,10 +19,10 @@ Generates a excel and powerpoint report using [pandas](https://pandas.pydata.org
 
 * AVE Data.xlsx
 * AVE Report (start date) - (end date).xlsx for example AVE Report 09.08.2018 - 15.08.2018.xlsx 
-
-![ave-data](./data-files/ave-data.png "AVE Data")
-
 * SSA digital data for weekly report (start date) - (end date).xlsx 
+
+The output excel file looks like this:
+![ave-data](./data-files/ave-data.PNG "AVE Data")
 
 3. Select the articles the articles that you would like to add to the powerpoint presentation as follows:
 
