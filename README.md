@@ -28,19 +28,19 @@ The output excel file looks like this:
 
 * In the Print and Online tab highlight 5 product articles in yellow (#FFFFFF00) and 5 corporate articles in green (#FF92D050).
 
-![alt text](./data-files/excel-data.png "AVE Data")
+![alt text](./data-files/excel-data.PNG "AVE Data")
 
 * In the Broadcast tab highlight 2 broadcasts in red (#FFFF0000).
 
-![alt text](./data-files/excel-data2.png "AVE Data")
+![alt text](./data-files/excel-data2.PNG "AVE Data")
 
 * In the OnlineSSA and SocialSSA highlight 5 articles in orange (#FFFFC000) and 3 tweets in light blue (#FF00B0F0).
 
-![alt text](./data-files/excel-data3.png "AVE Data")
-![alt text](./data-files/excel-data4.png "AVE Data")
+![alt text](./data-files/excel-data3.PNG "AVE Data")
+![alt text](./data-files/excel-data4.PNG "AVE Data")
 
 4. run [powerpoint_nissan.py](https://github.com/mazi76erx2/powerpoint_nissan.py). This will generate the following file:
 
 * Nissan Weekly Report (start date) - (end date).pptx for example Nissan Weekly Report  09 August - 15 August 2018
 
-![alt text](./data-files/powerpoint-data.png "AVE Data")
+![alt text](./data-files/powerpoint-data.PNG "AVE Data")
