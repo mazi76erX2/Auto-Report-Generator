@@ -1,18 +1,17 @@
-from pptx import Presentation
-from pptx.util import Pt
-from pptx.dml.color import RGBColor
-
-import requests
-from datetime import datetime
-from openpyxl import load_workbook
-from urllib.parse import quote_plus
-from urllib.request import urlopen
-from urllib.error import HTTPError, URLErrors
-from bs4 import BeautifulSoup
-import pandas as pd
 import random
 import time
+from datetime import datetime
+from urllib.error import HTTPError, URLErrors
+from urllib.parse import quote_plus
+from urllib.request import urlopen
 
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from openpyxl import load_workbook
+from pptx import Presentation
+from pptx.dml.color import RGBColor
+from pptx.util import Pt
 
 LIST_PRINT_TOP10 = []
 LIST_ONLINE_TOP10 = []
@@ -34,23 +33,23 @@ SUBJECT_LIST = ['GT-R', 'NV 350 Impendulo', 'Qashqai', 'NV 200 Combi',
                 'Nissan Kicks', 'Nissan Primera', 'Bladeglider',
                 'Nissan ProPilot', 'Festival of Motoring', 'NV 350 Panel Van',
                 'Patrol Wagon', 'Livina', 'Nissan Sponsorship/sport',
-                'Nissan Motorsport','Nissan Spokespeople',
+                'Nissan Motorsport', 'Nissan Spokespeople',
                 'General Industry related', 'Titan', 'Rouge']
 
 
 def loadPrime():
     primeList = ('data-files/Prime Reading Current as of 02.2018.xlsx')
-    
+
     df = pd.read_excel(primeList)
-    
+
     printList = list(df['PRINT '])
-    printList = list(filter(lambda x: x==x, printList))
-    
+    printList = list(filter(lambda x: x == x, printList))
+
     onlineList = list(df['ONLINE '])
-    onlineList = list(filter(lambda x: x==x, onlineList))
-    
+    onlineList = list(filter(lambda x: x == x, onlineList))
+
     tvList = list(df['TV'])
-    tvList = list(filter(lambda x: x==x, tvList))
+    tvList = list(filter(lambda x: x == x, tvList))
 
     return printList, onlineList, tvList
 
@@ -61,7 +60,7 @@ def findSubject(text, description):
         if (text.lower().find(product.lower()) != -1) or \
            (description.lower().find(product.lower()) != -1):
             productFound = product
-    
+
     return productFound
 
 
@@ -106,7 +105,7 @@ def checkIfPrime(media):
     else:
         return False
 
-    
+
 def getExtract(url, description):
     text = str(description)
 
