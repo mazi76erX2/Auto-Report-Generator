@@ -127,7 +127,7 @@ def populate_delete_list(deletelist='delete_list.csv'):
         deleteList.append(url.replace('http://'
                                       ,'').replace('https://'
                                                    ,'').replace('www.',''))
-        
+
     return deleteList
 
 
@@ -145,7 +145,7 @@ def url_reach(url_reach_list='data-files/URL Database Master.xlsx'):
     df = pd.read_excel(url_reach_list)
 
     df = df.dropna()
-    
+
     for index, row in df.iterrows():
         url = row.url.replace('https://','').replace('http://',
                                                      '').replace('www.','')
@@ -157,7 +157,7 @@ def url_reach(url_reach_list='data-files/URL Database Master.xlsx'):
     df = df.set_index('url')
 
     url_reach = df.to_dict()['domain_reach']
-        
+
     return url_reach
 
 
@@ -198,16 +198,16 @@ def outputfile(df1, df2, df3, wb, excelFileOut):
        wb (openpyxl.workbook): Excel workbook to combine
        excelFile (str):  The output excel files name.
     """
-   
+
     writer = pd.ExcelWriter(excelFileOut, engine='openpyxl')
     writer.book = wb
     writer.sheets = {wb['Summary'].title: wb['Summary']}
-    
+
     df1.to_excel(writer, 'Print', index=False)
     df2.to_excel(writer, 'Online', index=False)
     df3.to_excel(writer, 'Broadcast', index=False)
     writer.save()
-         
+
     print(excelFileOut, 'is done!')
 
 
@@ -224,13 +224,13 @@ def outputfileSSA(df1, df2, excelFileOut):
     df1.to_excel(writer, 'Online SSA', index=False)
     df2.to_excel(writer, 'Social SSA', index=False)
     writer.save()
-         
+
     print(excelFileOut, 'is done!')
 
 
 def get_outputfile_name():
     """Generates a string using today's date and a date from 7 days ago
-    
+
     Returns:
        date (string)
     """
@@ -247,7 +247,7 @@ def get_outputfile_name():
 
 def get_outputfile_nameSSA():
     """Generates a string using today's date and a date from 7 days ago
-    
+
     Returns:
        date (string)
     """
@@ -260,7 +260,7 @@ def get_outputfile_nameSSA():
             '.xlsx')
 
     return date
-    
+
 
 def check_url(url, deleteList):
     """Checks if the given url is in the auto delete list.
@@ -279,7 +279,7 @@ def check_url(url, deleteList):
         return True
     else:
         return False
-    
+
 
 def getExtract(url):
     """Returns the paragraphs from a webpage
@@ -308,14 +308,14 @@ def getExtract(url):
 
     except (HTTPError, URLError) as error:
         text = ''
-        
+
     return text
 
 
 def find_category(title, description, url):
     """Determines whether the category is Product or Corporate from description
         and webpage paragraphs.
-        
+
     Args:
         description (string): Text from Online Data Frame
         url (string): URL to extract paragraphs from
@@ -327,7 +327,7 @@ def find_category(title, description, url):
     for product in productList:
         if product.lower() in title.lower():
             return True
-            
+
     for product in productList:
         if product.lower() in str(description).lower():
             return True
@@ -342,16 +342,16 @@ def find_category(title, description, url):
                 return False
         else:
             return False
-    
+
 
 def find_domain(url, url_list):
     """Determines domain_reach from excelfile with domain numbers
-        
+
     Args:
         url (string): URL to compare with urlDatabaseList
 
     Returns:
-       Reach based on urlDatabaseList if found otherwise it returns 1000 
+       Reach based on urlDatabaseList if found otherwise it returns 1000
     """
     url = url.replace('https://','').replace('http://','').replace('www.','')
     url = url[:url.find('/')]
@@ -362,15 +362,15 @@ def find_domain(url, url_list):
 
 
 def online_fix(df):
-    """Fix the 
-        
+    """Fix the
+
     Args:
         df (pandas.DataFrame): DataFrame from onlineandsocial.xlsx
 
     Returns:
         df (pandas.DataFrame): Fix DataFrame
     """
-    
+
     start_time = time.time()
 
     url_reach_list = url_reach()
@@ -390,16 +390,16 @@ def online_fix(df):
     df.published_at = df.published_at.dt.date
 
     dropList = []
-    
+
     for index, row in df.iterrows():
         df.loc[[index], 'source_url'] = row.source_url.replace(
                         'http://','').replace('https://','').replace('www.','')
-        
+
         if check_url(row.source_url, deleteList):
             dropList.append(index)
 
     df.drop(dropList, inplace=True)
-    
+
     for index, row in df.iterrows():
         if find_category(row.title, row.description, row.url):
             df.loc[[index], 'category'] = 'Product'
@@ -409,7 +409,7 @@ def online_fix(df):
         if (row.domain_reach == 0) or (np.isnan(row.domain_reach)):
             df.loc[[index], 'domain_reach'] = find_domain(row.url,
                                                           url_reach_list)
-    
+
     df.AVE = df.domain_reach*0.21
 
     df = df.drop(['id', 'alert_id', 'parent_id', 'children', 'parent_url',
@@ -422,15 +422,15 @@ def online_fix(df):
 
 
 def online_and_social_SSA_fix(df):
-    """Fix the 
-        
+    """Fix the
+
     Args:
         df (pandas.DataFrame): DataFrame from onlineandsocial.xlsx
 
     Returns:
         df (pandas.DataFrame): Fix DataFrame
     """
-    
+
     start_time = time.time()
 
     url_reach_list = url_reach()
@@ -444,12 +444,12 @@ def online_and_social_SSA_fix(df):
     df.published_at = pd.to_datetime(df.published_at)
     #  Gets rid of the time without time
     df.published_at = df.published_at.dt.date
-    
+
     for index, row in df.iterrows():
         if (((row.domain_reach == 0) or (np.isnan(row.domain_reach)))
             and (df.source_type.iloc[0] != 'twitter')):
             df.loc[[index], 'domain_reach'] = 1000
-            
+
     if df.source_type.iloc[0] == 'twitter':
         df.AVE = df.cumulative_reach*0.11
     else:
@@ -462,11 +462,11 @@ def online_and_social_SSA_fix(df):
     print("--- SSA Took %s seconds ---" % (time.time() - start_time))
 
     return df
-        
+
 
 def print_fix(df):
-    """Fix the 
-        
+    """Fix the
+
     Args:
         df (pandas.DataFrame): DataFrame from print.xlsx
 
@@ -474,7 +474,7 @@ def print_fix(df):
         df (pandas.DataFrame): Fix DataFrame
     """
     start_time = time.time()
-    
+
     df['Category'] = ''
 
     #  Determines whether the category is Product or Corporate
@@ -491,12 +491,12 @@ def print_fix(df):
                 cat = 'Corporate'
         category.append(cat)
         df.loc[[index], 'Category'] = category[0]
-            
+
 ##            if sub in productList:
 ##                df.loc[[index], 'Category'] = 'Product'
 ##            else:
 ##                df.loc[[index], 'Category'] = 'Corporate'        
-    
+
     #  Change Sentiment from number to String
     for index, row in df.iterrows():
         if df.Sentiment[index] == 1:
@@ -515,13 +515,13 @@ def print_fix(df):
                   'Client'], axis=1)
 
     print("--- Print Took %s seconds ---" % (time.time() - start_time))
-                              
+
     return df
 
 
 def broadcast_fix_old(df):
-    """Fix the 
-        
+    """Fix the
+
     Args:
         df (pandas.DataFrame): DataFrame from broadcast.xlsx
 
@@ -529,7 +529,7 @@ def broadcast_fix_old(df):
         df (pandas.DataFrame): Fix DataFrame
     """
     start_time = time.time()
-    
+
     df.Date  = pd.to_datetime(df.Date)
     df.Date = df.Date.dt.date
 
@@ -570,7 +570,7 @@ def pivotTable(df, sources, ave):
 def placeImage(wb, ws):
     img = drawing.image.Image('nissan.png')
     ws.add_image(img)
-    
+
     return wb 
 
 
@@ -629,7 +629,7 @@ if not dfTV.empty:
     top3TV = pivotTV.head(3)
     excelCellsTV = ws['K12':'M14']
     top3Summary(excelCellsTV, top3TV, 'Total AVE')
-    
+
 if not dfRadio.empty:
     ws['D15'].value = dfRadio['Total AVE'].count()
     ws['E15'].value = dfRadio['Total AVE'].sum()
