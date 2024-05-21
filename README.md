@@ -1,4 +1,10 @@
 # Auto-Report-Generator
+
+A Project I worked on for a company in 2017 (Used with permission)
+
+Considering refactoring the code to show what I've learnt over the years
+
+
 Generates a excel and powerpoint report using [pandas](https://pandas.pydata.org), [openpyxl](https://openpyxl.readthedocs.io/en/stable) and [python-pptx](https://openpyxl.readthedocs.io/en/stable) using data exported from [DataScouting](https://datascouting.com/) and [Mention](https://mention.com/en/).
 
 ## Usage
